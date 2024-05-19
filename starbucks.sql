@@ -9,7 +9,7 @@
 -- drop table transcript;
 -- create table transcript(id int,person varchar(100),events char(30),transactions varchar(100),horas smallint);
 -- copy transcript from 'D:\Bruna\Desktop\SQL\Starbucks\transcript.csv' delimiter ',' csv header ;
-SELECT * FROM transcript FETCH FIRST 5 ROWS ONLY;
+-- select * from transcript fetch first 5 rows only;
 -- alter table transcript add column copia_transactions varchar(100);
 -- update transcript set copia_transactions=transactions;
 
@@ -18,8 +18,8 @@ SELECT * FROM transcript FETCH FIRST 5 ROWS ONLY;
 -- UPDATE transcript
 -- SET transactions = LEFT(transactions, LENGTH(transactions) - 2)
 -- WHERE transactions LIKE '%''%''}';
-SELECT * FROM portfolio;
-SELECT * FROM profile;
+-- select * from portfolio;
+-- select * from profile;
 
 -- id de portfolio com id de transcript
 
@@ -92,14 +92,121 @@ SELECT * FROM profile;
 -- select * from transcript as t inner join portfolio as p on t.id_oferta=p.id;
 
 -- qual gênero mais compra e em qual tipo de oferta?
-SELECT events,count(events) AS "qtd enviada" FROM transcript GROUP BY events;
+-- select events,count(events) as "qtd enviada" from transcript group by events;
 --quantidade de ofertas enviadas para mulheres 
 -- select t.events, count(t.events) as "qtd enviada para mulheres" from transcript as t inner join profile as p on t.person=p.id where p.gênero='F' group by events;
 -- esta forma mostra apenas os resultados para um gênero de cada vez, seria necessário escrever uma querie para cada gênero
 -- a window function mostra o resultado para cada linha, o que dificulta a visualização, por isso, testei de outra forma ainda
 -- select p.gênero, t.events, count(t.events) over(partition by t.events,p.gênero )from transcript as t inner join profile as p on t.person=p.id;
 -- esta forma resume adequadamente os resultados por gÊnero e oferta
-SELECT p.gênero,t.events, count(t.events) AS "qtd_ofertas" FROM transcript AS t INNER JOIN profile AS p ON t.person=p.id GROUP BY t.events,p.gênero;
-SELECT * FROM transcript WHERE events LIKE '%transaction%';
+-- select p.gênero,t.events, count(t.events) as "qtd_ofertas" from transcript as t inner join profile as p on t.person=p.id group by t.events,p.gênero;
+-- select * from transcript where events like '%transaction%';
 
-SELECT p.gênero, 
+-- pergunta 1 What is the distribution of customers in each age category according to their gender type? Tem mais adultos no outros e homens, e mais mulheres idosas
+-- select gênero, sum(case when idade>=18 and idade<40 then 1 else 0 end) as "jovens",
+--         sum (case when idade>=40 and idade < 60 then 1 else 0 end ) as "adultos",  sum(case when idade>=60 and idade<118 then 1 else 0 end) as "idosos" from profile group by gênero;
+        
+ -- pergunta 2: What is the distribution of each offer type in each age category ?
+--  select p.oferta,sum(case when pro.idade>=18 and pro.idade<40 then 1 else 0 end) as "jovens",
+--         sum (case when pro.idade>=40 and pro.idade < 60 then 1 else 0 end ) as "adultos", 
+--          sum(case when pro.idade>=60 and pro.idade<118 then 1 else 0 end) as "idosos"
+--          from transcript as t
+--         inner join portfolio as p on t.id_oferta=p.id
+--         inner join profile as pro on pro.id=t.person
+--         group by p.oferta;
+ 
+ --Q3 — Based on the demographic data of the customers who gets the highest income , males or females or others?
+ -- A: mulheres
+--  select gênero,avg(salário) as "média" ,max(salário) as "máximo salário da categoria" from profile where idade<118 group by gênero;
+ 
+ -- Q4 — How many new members Starbucks got each year?
+--  select ano,count(ano) from profile group by ano order by ano asc;
+ 
+ --Q5 — What is the distribution of the offers that each gender receive 
+-- select p.oferta,count(p.oferta),pro.gênero
+--          from profile as pro
+--         inner join transcript as t on pro.id=t.person
+--         inner join portfolio as p on t.id_oferta=p.id
+--         group by p.oferta, pro.gênero;
+
+--Q6 — What is the completion rate of each offer for gender type, age category and income category for each offer type?
+-- 
+
+-- 
+
+
+-- select profile.gênero, portfolio.oferta, 100*sum(case when t.events='offer completed' then 1 else 0 end)/sum(count(t.events)) over() from transcript as t inner join profile on profile.id=t.person
+-- inner join portfolio on portfolio.id=t.id_oferta
+--  where t.events='offer completed' group by profile.gênero, t.events, portfolio.oferta 
+--  order by portfolio.oferta;
+-- 
+-- 
+-- 
+-- 
+-- select portfolio.oferta, t.events, 100*sum(case when p.idade <40  then 1 else 0 end)/33579 as "ofertas completas dos jovens",
+--  100*sum(case when (p.idade >=40 and p.idade<60) then 1 else 0 end)/33579 as "ofertas completas dos adultos",
+-- 100*sum(case when (p.idade >=60 and p.idade<118 ) then 1 else 0 end)/33579 as "ofertas completas dos idosos"
+--  from profile as p inner join transcript as t on t.person=p.id INNER JOIN portfolio on portfolio.id=t.id_oferta
+--   where t.events='offer completed' 
+--   group by portfolio.oferta, t.events;
+--  
+-- 
+-- select portfolio.oferta, 100*sum(case when (p.salário<=50000 ) then 1 else 0 end)/count(p.salário) as "faixa salarial 1",
+--  100*sum(case when (p.salário >50000 and p.salário<=70000) then 1 else 0 end)/count(p.salário) as "faixa salarial 2",
+-- 100*sum(case when (p.salário >70000 and p.salário<=90000) then 1 else 0 end)/count(p.salário) as "faixa salarial 3",
+-- 100*sum(case when (p.salário >90000 and p.salário<=110000) then 1 else 0 end)/count(p.salário) as "faixa salarial 4",
+-- 100*sum(case when (p.salário >110000) then 1 else 0 end)/count(p.salário) as "faixa salarial 5"
+--  from profile as p 
+--  inner join transcript as t on t.person=p.id
+--  inner join portfolio on portfolio.id=t.id_oferta
+--   where t.events='offer completed'
+--   group by portfolio.oferta;
+--  
+-- Q: qual a taxa média de completude de oferta por cliente por gênero?
+-- select id_oferta,sum(case when events='offer viewed' then 1 else 0 end) as "vistas",sum(case when events='offer completed' then 1 else 0 end) as "completadas", person as "pessoa" from transcript group by transcript.id_oferta,person ;
+-- select sum(case when profile.idade<40 then 1 else 0 end) from profile where ;
+
+--Q7 — What is the completion rate of each offer type with and without view in each age and income category?
+-- com view e completa por idade
+-- select portfolio.oferta as "oferta vista e completa", 100*sum(case when profile.idade
+-- <40 then 1 else 0 end)/3100 as " total de jovens", 100*sum(case when profile.idade>=40 and profile.idade<60 then 1 else 0 end)/5850 as "total de adultos", 100*sum(case when profile.idade>=60 and profile.idade<118 then 1 else 0 end)/5875 as "total de idosos"  from(
+--     select id_oferta,sum(case when events='offer viewed' then 1 else 0 end) as "vistas",
+--     sum(case when events='offer completed' then 1 else 0 end) as "completadas", person as "pessoa"
+--     from transcript group by transcript.id_oferta, person) 
+-- my_table 
+-- inner join profile on profile.id=my_table.pessoa
+-- inner join portfolio on portfolio.id=my_table.id_oferta
+-- where my_table.completadas=1 and my_table.vistas=1
+-- group by portfolio.oferta;
+-- 
+-- sem view e completa
+-- select portfolio.oferta AS "oferta não vista e completa", sum(case when profile.idade
+-- <40 then 1 else 0 end) as " total de jovens", sum(case when profile.idade>=40 and profile.idade<60 then 1 else 0 end) as "total de adultos", sum(case when profile.idade>=60 and profile.idade<118 then 1 else 0 end) as "total de idosos"  from(
+-- select id_oferta,sum(case when events='offer viewed' then 1 else 0 end) as "vistas",
+-- sum(case when events='offer completed' then 1 else 0 end) as "completadas"
+-- from transcript group by transcript.id_oferta) my_table 
+-- inner join profile on profile.id=my_table.pessoa
+-- inner join portfolio on portfolio.id=my_table.id_oferta
+-- where my_table.completadas=1 and my_table.vistas=0
+-- group by portfolio.oferta;
+-- 
+
+-- 3100 abaixo de 40, 5850 abaixo de 60, 5875 acima de 60 tirando o erro
+
+-- select portfolio.oferta, 100*sum(case when (p.salário<=50000 ) then 1 else 0 end)/count(p.salário) as "faixa salarial 1",
+--  100*sum(case when (p.salário >50000 and p.salário<=70000) then 1 else 0 end)/count(p.salário) as "faixa salarial 2",
+-- 100*sum(case when (p.salário >70000 and p.salário<=90000) then 1 else 0 end)/count(p.salário) as "faixa salarial 3",
+-- 100*sum(case when (p.salário >90000 and p.salário<=110000) then 1 else 0 end)/count(p.salário) as "faixa salarial 4",
+-- 100*sum(case when (p.salário >110000) then 1 else 0 end)/count(p.salário) as "faixa salarial 5" FROM (
+--         select id_oferta,sum(case when events='offer viewed' then 1 else 0 end) as "vistas",
+--     sum(case when events='offer completed' then 1 else 0 end) as "completadas", person as "pessoa"
+--     from transcript group by transcript.id_oferta, person) 
+-- my_table 
+-- inner join profile on profile.id=my_table.pessoa
+-- inner join portfolio on portfolio.id=my_table.id_oferta
+-- where my_table.completadas=1 and my_table.vistas=1
+-- group by portfolio.oferta;
+SELECT count(salário<50000) FROM profile;
+SELECT * FROM transcript FETCH FIRST 5 ROWS ONLY;
+SELECT * FROM portfolio;
+SELECT events,count(events) FROM transcript GROUP BY events;
